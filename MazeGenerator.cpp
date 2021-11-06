@@ -34,8 +34,13 @@ namespace aisa
         cv::Point localCurrent = root;
         current_ = localCurrent;
         mat_.at<uchar>(current_) = 255;
-        cv::imshow("aisa",mat_);
-        cv::waitKey(1);
+        cv::imshow("aisa", mat_);
+        auto key = cv::waitKey(1);
+        if (key == 27)
+        {
+            exit(EXIT_FAILURE);
+        }
+
         UpdateUnvisitedNeighbours();
         while (!unvisitedNeighbours_.empty())
         {
