@@ -9,6 +9,7 @@
  * 
  */
 
+#include <random>
 #include "MazeGenerator.hpp"
 
 namespace aisa
@@ -21,16 +22,30 @@ namespace aisa
         show_ = true;
     }
 
-    aisa::Maze MazeGenerator::RandomizedDepthFirstSearch(cv::Point root, std::string implementation)
+    aisa::Maze MazeGenerator::RandomizedDepthFirstSearch(cv::Point root, std::string implementation, const double &revisit)
     {
         root = root * 2 + cv::Point(1, 1);
         if (implementation == "recursive")
         {
-            RandomizedDepthFirstSearchRecursiveImplementation(root);
+            if (revisit > 0.0)
+            {
+                std::cerr << "Rdfs recursive with revisit is not implemented." << std::endl;
+            }
+            else
+            {
+                RandomizedDepthFirstSearchRecursiveImplementation(root);
+            }
         }
         else if (implementation == "iterative")
         {
-            RandomizedDepthFirstSearchIterativeImplementation(root);
+            if (revisit > 0.0)
+            {
+                RandomizedDepthFirstSearchIterativeImplementationWithRevisit(root, revisit);
+            }
+            else
+            {
+                RandomizedDepthFirstSearchIterativeImplementation(root);
+            }
         }
         return aisa::Maze(mat_);
     }
@@ -56,22 +71,16 @@ namespace aisa
     {
         cv::Point localCurrent = root;
         current_ = localCurrent;
-        mat_.at<uchar>(current_) = 255;
-        cv::imshow("aisa", mat_);
-        auto key = cv::waitKey(1);
-        if (key == 27)
-        {
-            exit(EXIT_FAILURE);
-        }
+        MarkVisited(current_);
 
-        UpdateUnvisitedNeighbours();
+        UpdateUnvisitedNeighbours(unvisitedNeighbours_, current_, mat_);
         while (!unvisitedNeighbours_.empty())
         {
-            selectedNeighbour_ = RandomUnvisitedNeighbour();
-            RemoveWall();
+            selectedNeighbour_ = RandomUnvisitedNeighbour(unvisitedNeighbours_);
+            RemoveWall(mat_, current_, selectedNeighbour_);
             RandomizedDepthFirstSearchRecursiveImplementation(selectedNeighbour_);
             current_ = localCurrent;
-            UpdateUnvisitedNeighbours();
+            UpdateUnvisitedNeighbours(unvisitedNeighbours_, current_, mat_);
         }
     }
 
@@ -83,13 +92,7 @@ namespace aisa
         availableCurrentVec_.clear();
         for (size_t i = 0; i < currentVec_.size(); i++)
         {
-            mat_.at<uchar>(currentVec_[i]) = 255;
-            cv::imshow("aisa", mat_);
-            auto key = cv::waitKey(1);
-            if (key == 27)
-            {
-                exit(EXIT_FAILURE);
-            }
+            MarkVisited(currentVec_[i]);
             UpdateUnvisitedNeighbours(unvisitedNeighbours_, currentVec_[i], mat_);
             if (!unvisitedNeighbours_.empty())
             {
@@ -141,6 +144,26 @@ namespace aisa
         }
     }
 
+    void MazeGenerator::RandomizedDepthFirstSearchIterativeImplementationWithRevisit(cv::Point root, const double &revisit)
+    {
+        MarkVisited(mat_, root);
+        stack_.push(root);
+        while (!stack_.empty())
+        {
+            current_ = stack_.top();
+            stack_.pop();
+            UpdateUnvisitedNeighboursWithRevisit(unvisitedNeighbours_, current_, mat_, revisit);
+            if (!unvisitedNeighbours_.empty())
+            {
+                stack_.push(current_);
+                selectedNeighbour_ = RandomUnvisitedNeighbour(unvisitedNeighbours_);
+                RemoveWall(mat_, current_, selectedNeighbour_);
+                MarkVisited(mat_, selectedNeighbour_);
+                stack_.push(selectedNeighbour_);
+            }
+        }
+    }
+
     void MazeGenerator::RandomizedDepthFirstSearchIterativeImplementationMultiRoot(std::vector<cv::Point> roots)
     {
         stackVec_.resize(roots.size());
@@ -174,105 +197,74 @@ namespace aisa
         }
     }
 
-    bool MazeGenerator::LeftAvailable()
+    bool MazeGenerator::IsNotVisited(const cv::Point &point, const cv::Mat &mat)
     {
-        if (current_.x > 2 && mat_.at<uchar>(cv::Point(current_.x - 2, current_.y)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return mat.at<uchar>(point) == 0;
+    }
+
+    bool MazeGenerator::IsNotVisitedWithRevisit(const cv::Point &point, const cv::Mat &mat, const double &revisit)
+    {
+        return mat.at<uchar>(point) == 0 || Probably(revisit);
     }
 
     bool MazeGenerator::LeftAvailable(const cv::Point &current, const cv::Mat &mat)
     {
-        if (current.x > 2 && mat.at<uchar>(cv::Point(current.x - 2, current.y)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    bool MazeGenerator::RightAvailable()
-    {
-        if (current_.x < (mat_.cols - 3) && mat_.at<uchar>(cv::Point(current_.x + 2, current_.y)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return HasLeft(current) && IsNotVisited(Left(current), mat);
     }
 
     bool MazeGenerator::RightAvailable(const cv::Point &current, const cv::Mat &mat)
     {
-        if (current.x < (mat.cols - 3) && mat.at<uchar>(cv::Point(current.x + 2, current.y)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    bool MazeGenerator::TopAvailable()
-    {
-        if (current_.y > 2 && mat_.at<uchar>(cv::Point(current_.x, current_.y - 2)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return HasRight(current, mat) && IsNotVisited(Right(current), mat);
     }
 
     bool MazeGenerator::TopAvailable(const cv::Point &current, const cv::Mat &mat)
     {
-        if (current.y > 2 && mat.at<uchar>(cv::Point(current.x, current.y - 2)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    bool MazeGenerator::BottomAvailable()
-    {
-        if (current_.y < (mat_.rows - 3) && mat_.at<uchar>(cv::Point(current_.x, current_.y + 2)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return HasTop(current) && IsNotVisited(Top(current), mat);
     }
 
     bool MazeGenerator::BottomAvailable(const cv::Point &current, const cv::Mat &mat)
     {
-        if (current.y < (mat.rows - 3) && mat.at<uchar>(cv::Point(current.x, current.y + 2)) == 0)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return HasBottom(current, mat) && IsNotVisited(Bottom(current), mat);
     }
 
-    cv::Point MazeGenerator::Left()
+    bool MazeGenerator::LeftAvailableWithRevisit(const cv::Point &current, const cv::Mat &mat, const double &revisit)
     {
-        return current_ + cv::Point(-2, 0);
+        return HasLeft(current) && IsNotVisitedWithRevisit(Left(current), mat, revisit);
+    }
+
+    bool MazeGenerator::RightAvailableWithRevisit(const cv::Point &current, const cv::Mat &mat, const double &revisit)
+    {
+        return HasRight(current, mat) && IsNotVisitedWithRevisit(Right(current), mat, revisit);
+    }
+
+    bool MazeGenerator::TopAvailableWithRevisit(const cv::Point &current, const cv::Mat &mat, const double &revisit)
+    {
+        return HasTop(current) && IsNotVisitedWithRevisit(Top(current), mat, revisit);
+    }
+
+    bool MazeGenerator::BottomAvailableWithRevisit(const cv::Point &current, const cv::Mat &mat, const double &revisit)
+    {
+        return HasBottom(current, mat) && IsNotVisitedWithRevisit(Bottom(current), mat, revisit);
+    }
+
+    bool MazeGenerator::HasLeft(const cv::Point &current)
+    {
+        return current.x > 2;
+    }
+
+    bool MazeGenerator::HasRight(const cv::Point &current, const cv::Mat &mat)
+    {
+        return current.x < (mat.cols - 3);
+    }
+
+    bool MazeGenerator::HasTop(const cv::Point &current)
+    {
+        return current.y > 2;
+    }
+
+    bool MazeGenerator::HasBottom(const cv::Point &current, const cv::Mat &mat)
+    {
+        return current.y < (mat.rows - 3);
     }
 
     cv::Point MazeGenerator::Left(const cv::Point &current)
@@ -280,19 +272,9 @@ namespace aisa
         return current + cv::Point(-2, 0);
     }
 
-    cv::Point MazeGenerator::Right()
-    {
-        return current_ + cv::Point(+2, 0);
-    }
-
     cv::Point MazeGenerator::Right(const cv::Point &current)
     {
         return current + cv::Point(+2, 0);
-    }
-
-    cv::Point MazeGenerator::Top()
-    {
-        return current_ + cv::Point(0, -2);
     }
 
     cv::Point MazeGenerator::Top(const cv::Point &current)
@@ -300,36 +282,9 @@ namespace aisa
         return current + cv::Point(0, -2);
     }
 
-    cv::Point MazeGenerator::Bottom()
-    {
-        return current_ + cv::Point(0, +2);
-    }
-
     cv::Point MazeGenerator::Bottom(const cv::Point &current)
     {
         return current + cv::Point(0, +2);
-    }
-
-    void MazeGenerator::UpdateUnvisitedNeighbours()
-    {
-        unvisitedNeighbours_.clear();
-
-        if (LeftAvailable())
-        {
-            unvisitedNeighbours_.push_back(Left());
-        }
-        if (RightAvailable())
-        {
-            unvisitedNeighbours_.push_back(Right());
-        }
-        if (TopAvailable())
-        {
-            unvisitedNeighbours_.push_back(Top());
-        }
-        if (BottomAvailable())
-        {
-            unvisitedNeighbours_.push_back(Bottom());
-        }
     }
 
     void MazeGenerator::UpdateUnvisitedNeighbours(std::vector<cv::Point> &unvisitedNeighbours, const cv::Point &current, const cv::Mat &mat)
@@ -353,19 +308,30 @@ namespace aisa
         }
     }
 
-    cv::Point MazeGenerator::RandomUnvisitedNeighbour()
+    void MazeGenerator::UpdateUnvisitedNeighboursWithRevisit(std::vector<cv::Point> &unvisitedNeighbours, const cv::Point &current, const cv::Mat &mat, const double &revisit)
     {
-        return unvisitedNeighbours_[std::rand() % unvisitedNeighbours_.size()];
+        unvisitedNeighbours.clear();
+        if (LeftAvailableWithRevisit(current, mat, revisit))
+        {
+            unvisitedNeighbours.emplace_back(Left(current));
+        }
+        if (RightAvailableWithRevisit(current, mat, revisit))
+        {
+            unvisitedNeighbours.emplace_back(Right(current));
+        }
+        if (TopAvailableWithRevisit(current, mat, revisit))
+        {
+            unvisitedNeighbours.emplace_back(Top(current));
+        }
+        if (BottomAvailableWithRevisit(current, mat, revisit))
+        {
+            unvisitedNeighbours.emplace_back(Bottom(current));
+        }
     }
 
     cv::Point MazeGenerator::RandomUnvisitedNeighbour(const std::vector<cv::Point> &unvisitedNeighbours)
     {
         return unvisitedNeighbours[std::rand() % unvisitedNeighbours.size()];
-    }
-
-    void MazeGenerator::RemoveWall()
-    {
-        mat_.at<uchar>((current_ + selectedNeighbour_) / 2) = 255;
     }
 
     void MazeGenerator::RemoveWall(cv::Mat &mat, const cv::Point &current, const cv::Point &selectedNeighbour)
@@ -402,5 +368,18 @@ namespace aisa
     cv::Mat MazeGenerator::GetMat()
     {
         return mat_;
+    }
+
+    bool MazeGenerator::Probably(const double &revisit)
+    {
+        // std::knuth_b rand_engine;
+        // std::bernoulli_distribution distribution(revisit);
+        // return distribution(rand_engine);
+
+        // std::knuth_b rand_engine; // replace knuth_b with one of the engines listed below
+        // std::uniform_real_distribution<> uniform_zero_to_one(0.0, 1.0);
+        // return uniform_zero_to_one(rand_engine) >= revisit;
+
+        return std::rand() / (RAND_MAX + 1.0) < revisit;
     }
 }

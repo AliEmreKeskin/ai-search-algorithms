@@ -7,7 +7,7 @@
 int main(int, char **)
 {
     auto mazeGenerator = aisa::MazeGenerator({100, 100});
-    auto maze = mazeGenerator.RandomizedDepthFirstSearchMultiRoot({{0, 0}, {99, 99}}, "iterative");
+    auto maze = mazeGenerator.RandomizedDepthFirstSearch({0, 0}, "iterative", 0.001);
     cv::imwrite("aisa.png", maze.GetMat());
     cv::waitKey();
 }
