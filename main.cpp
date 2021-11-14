@@ -8,14 +8,16 @@
 
 int main(int, char **)
 {
-    cv::Size size(20, 20);
+    srand(963852);
+
+    cv::Size size(100, 100);
     cv::Point initial(0, 0);
     cv::Point goal(size.width - 1, size.height - 1);
 
     auto mazeGenerator = aisa::MazeGenerator(size);
     auto maze = mazeGenerator.RandomizedDepthFirstSearch({0, 0}, "iterative", 0.01);
-    maze.Show(true);
-    cv::imwrite("aisa.png", maze.Mat());
+    maze.Show(false);
+    cv::imwrite("maze.png", maze.Mat());
 
     auto mazeSolver = aisa::MazeSolver();
     std::vector<cv::Point> solution;
@@ -25,8 +27,12 @@ int main(int, char **)
     // mazeSolver.DfsIterative(maze, initial, goal, solution);
     // mazeSolver.DfsIterativeWıthPath(maze, initial, goal, solution);
     // auto result = mazeSolver.Dls(maze, initial, goal, 10000000, aisa::MazeSolver::Implementation::recursive);
+
+    
     // auto result = mazeSolver.IterativeDeepeningSearch(maze, initial, goal, solution, aisa::MazeSolver::Implementation::recursive);
-    auto result = mazeSolver.UniformCostSearch(maze,initial,goal,solution);
+    // auto result = mazeSolver.UniformCostSearch(maze, initial, goal, solution);
+    // auto result = mazeSolver.AStar(maze, initial, goal, solution, aisa::MazeSolver::Heuristic::EuclideanDistance);
+    auto result = mazeSolver.AStar(maze, initial, goal, solution, aisa::MazeSolver::Heuristic::ManhattanDistance);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

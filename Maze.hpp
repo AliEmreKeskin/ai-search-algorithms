@@ -23,6 +23,7 @@ namespace aisa
         {
 
         };
+        Maze();
         Maze(cv::InputOutputArray mat);
         ~Maze() = default;
         cv::Mat &Mat();
@@ -59,7 +60,7 @@ namespace aisa
         uchar frontier_ = 220;
         uchar road_ = 255;
         cv::Mat mat_;
-        bool show_;
+        bool show_ = false;
         int waitKeyDelay_ = 1;
     };
 } // namespace aisa
