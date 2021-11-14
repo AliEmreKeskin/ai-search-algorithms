@@ -14,6 +14,10 @@
 
 namespace aisa
 {
+    Maze::Maze()
+    {
+    }
+
     Maze::Maze(cv::InputOutputArray mat) : mat_(mat.getMat())
     {
         cv::namedWindow("maze", cv::WindowFlags::WINDOW_NORMAL);

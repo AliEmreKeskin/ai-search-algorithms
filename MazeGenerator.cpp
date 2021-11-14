@@ -341,7 +341,7 @@ namespace aisa
 
     cv::Point MazeGenerator::RandomUnvisitedNeighbour(const std::vector<cv::Point> &unvisitedNeighbours)
     {
-        return unvisitedNeighbours[std::rand() % unvisitedNeighbours.size()];
+        return unvisitedNeighbours[rand() % unvisitedNeighbours.size()];
     }
 
     void MazeGenerator::RemoveWall(cv::Mat &mat, const cv::Point &current, const cv::Point &selectedNeighbour)

@@ -31,6 +31,11 @@ namespace aisa
             recursive = 1,
             iterative = 2
         };
+        enum class Heuristic
+        {
+            EuclideanDistance = 1,
+            ManhattanDistance = 2
+        };
         MazeSolver();
         ~MazeSolver();
         bool DfsIterativeWithPath(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution);
@@ -38,7 +43,10 @@ namespace aisa
         MazeSolver::DlsResult Dls(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution, size_t limit, Implementation implementation);
         bool IterativeDeepeningSearch(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution, Implementation implementation);
         bool UniformCostSearch(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution);
+        bool AStar(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution, Heuristic heuristic);
 
+        double EuclideanDistance(cv::Point current, cv::Point goal);
+        double ManhattanDistance(cv::Point current, cv::Point goal);
     private:
         MazeSolver::DlsResult DlsRecursive(aisa::Maze &maze, cv::Point initial, cv::Point goal, size_t limit);
         uchar discovered_ = 191;

@@ -21,11 +21,11 @@ namespace aisa
     class Tree
     {
     public:
-        Tree(T state, size_t pathCost, aisa::Tree<T> *parent);
+        Tree(T state, double pathCost, aisa::Tree<T> *parent);
         ~Tree();
-        void AddChild(T state, size_t cost);
+        void AddChild(T state, double cost);
         std::vector<aisa::Tree<T>> &Children();
-        size_t &PathCost();
+        double &PathCost();
         T &State();
         aisa::Tree<T> *Parent();
         friend bool operator==(const Tree<cv::Point> n1, const Tree<cv::Point> n2)
@@ -37,12 +37,12 @@ namespace aisa
 
     private:
         aisa::Tree<T> *parent_;
-        size_t pathCost_;
+        double pathCost_;
         std::vector<Tree> children_;
     };
 
     template <class T>
-    Tree<T>::Tree(T state, size_t pathCost, aisa::Tree<T> *parent)
+    Tree<T>::Tree(T state, double pathCost, aisa::Tree<T> *parent)
         : state_(state),
           pathCost_(pathCost),
           parent_(parent)
@@ -55,7 +55,7 @@ namespace aisa
     }
 
     template <class T>
-    void Tree<T>::AddChild(T state, size_t cost)
+    void Tree<T>::AddChild(T state, double cost)
     {
         children_.push_back(Tree<T>(state, pathCost_ + cost, this));
     }
@@ -67,7 +67,7 @@ namespace aisa
     }
 
     template <class T>
-    size_t &Tree<T>::PathCost()
+    double &Tree<T>::PathCost()
     {
         return pathCost_;
     }
