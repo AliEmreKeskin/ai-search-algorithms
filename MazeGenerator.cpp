@@ -19,7 +19,11 @@ namespace aisa
         size_ = size;
         mat_ = cv::Mat(size_ * 2 + cv::Size(1, 1), CV_8UC1, cv::Scalar(0));
         unvisitedNeighbours_.reserve(3);
-        show_ = true;
+        show_ = false;
+        if (show_)
+        {
+            cv::namedWindow("generator", cv::WINDOW_NORMAL);
+        }
     }
 
     aisa::Maze MazeGenerator::RandomizedDepthFirstSearch(cv::Point root, std::string implementation, const double &revisit)
@@ -47,6 +51,12 @@ namespace aisa
                 RandomizedDepthFirstSearchIterativeImplementation(root);
             }
         }
+
+        if (show_)
+        {
+            cv::destroyWindow("generator");
+        }
+
         return aisa::Maze(mat_);
     }
 
@@ -71,7 +81,7 @@ namespace aisa
     {
         cv::Point localCurrent = root;
         current_ = localCurrent;
-        MarkVisited(current_);
+        MarkVisited(mat_, current_);
 
         UpdateUnvisitedNeighbours(unvisitedNeighbours_, current_, mat_);
         while (!unvisitedNeighbours_.empty())
@@ -92,7 +102,7 @@ namespace aisa
         availableCurrentVec_.clear();
         for (size_t i = 0; i < currentVec_.size(); i++)
         {
-            MarkVisited(currentVec_[i]);
+            MarkVisited(mat_, currentVec_[i]);
             UpdateUnvisitedNeighbours(unvisitedNeighbours_, currentVec_[i], mat_);
             if (!unvisitedNeighbours_.empty())
             {
@@ -344,7 +354,7 @@ namespace aisa
         mat.at<uchar>(current) = 255;
         if (show_)
         {
-            cv::imshow("aisa", mat_);
+            cv::imshow("generator", mat_);
             auto key = cv::waitKey(1);
             if (key == 27)
             {

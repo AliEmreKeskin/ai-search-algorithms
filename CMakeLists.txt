@@ -6,7 +6,7 @@ enable_testing()
 
 find_package(OpenCV REQUIRED)
 add_executable(ai-search-algorithms)
-target_sources(ai-search-algorithms PRIVATE main.cpp Maze.cpp MazeGenerator.cpp)
+target_sources(ai-search-algorithms PRIVATE main.cpp Maze.cpp MazeGenerator.cpp MazeSolver.cpp)
 target_link_libraries(ai-search-algorithms PRIVATE ${OpenCV_LIBS})
 
 
