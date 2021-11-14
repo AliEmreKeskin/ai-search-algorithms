@@ -78,7 +78,35 @@ namespace aisa
         if (show_)
         {
             cv::imshow("maze", mat_);
-            auto key = cv::waitKey(1);
+            auto key = cv::waitKey(waitKeyDelay_);
+            if (key == 27)
+            {
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    void Maze::MarkFrontier(cv::Point point)
+    {
+        mat_.at<uchar>(point) = frontier_;
+        if (show_)
+        {
+            cv::imshow("maze", mat_);
+            auto key = cv::waitKey(waitKeyDelay_);
+            if (key == 27)
+            {
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    void Maze::MarkRoad(cv::Point point)
+    {
+        mat_.at<uchar>(point) = road_;
+        if (show_)
+        {
+            cv::imshow("maze", mat_);
+            auto key = cv::waitKey(waitKeyDelay_);
             if (key == 27)
             {
                 exit(EXIT_FAILURE);
@@ -118,7 +146,12 @@ namespace aisa
         return mat_.at<uchar>(point) != discovered_;
     }
 
-    aisa::Maze Maze::Clone()
+    bool Maze::IsFrontier(const cv::Point &point)
+    {
+        return mat_.at<uchar>(point) == frontier_;
+    }
+
+    aisa::Maze Maze::Clone() const
     {
         return aisa::Maze(mat_.clone());
     }

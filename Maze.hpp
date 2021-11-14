@@ -36,10 +36,13 @@ namespace aisa
         cv::Point Bottom(const cv::Point &current);
         void Trace(std::vector<cv::Point> trace);
         void MarkDiscovered(cv::Point point);
+        void MarkFrontier(cv::Point point);
+        void MarkRoad(cv::Point point);
         std::vector<cv::Point> Ways(cv::Point point);
         void Show(bool enable);
         bool IsNotDiscovered(const cv::Point &point);
-        aisa::Maze Clone();
+        bool IsFrontier(const cv::Point &point);
+        aisa::Maze Clone() const;
         size_t LengthOfPath();
         size_t NumberOfExpanded();
 
@@ -53,8 +56,11 @@ namespace aisa
         uchar wall_ = 0;
         uchar trace_ = 127;
         uchar discovered_ = 191;
+        uchar frontier_ = 220;
+        uchar road_ = 255;
         cv::Mat mat_;
         bool show_;
+        int waitKeyDelay_ = 1;
     };
 } // namespace aisa
 

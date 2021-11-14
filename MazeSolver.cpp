@@ -2,6 +2,9 @@
 #include <stack>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <deque>
+
+#include "Tree.hpp"
 
 namespace aisa
 {
@@ -139,6 +142,69 @@ namespace aisa
                 else if (result == DlsResult::failure)
                 {
                     return false;
+                }
+            }
+        }
+    }
+
+    bool MazeSolver::UniformCostSearch(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution)
+    {
+        initial = initial * 2 + cv::Point(1, 1);
+        goal = goal * 2 + cv::Point(1, 1);
+
+        aisa::Tree<cv::Point> *node = new aisa::Tree<cv::Point>(initial, 0, nullptr);
+        auto cmp = [](aisa::Tree<cv::Point> *left, aisa::Tree<cv::Point> *right)
+        {
+            return (left->PathCost()) < (right->PathCost());
+        };
+        std::deque<aisa::Tree<cv::Point> *> frontier;
+        frontier.push_back(node);
+        std::sort(frontier.begin(), frontier.end(), cmp);
+        maze.MarkFrontier(node->State());
+        while (true)
+        {
+            if (frontier.empty())
+            {
+                return false;
+            }
+            node = frontier.front();
+            frontier.pop_front();
+            maze.MarkRoad(node->State());
+            if (node->State() == goal)
+            {
+                solution.push_back(node->State());
+                while (node->Parent() != nullptr)
+                {
+                    node = node->Parent();
+                    solution.push_back(node->State());
+                }
+                delete node;
+                return true;
+            }
+            maze.MarkDiscovered(node->State());
+            auto ways = maze.Ways(node->State());
+            for (auto &&way : ways)
+            {
+                node->AddChild(way, 1);
+            }
+
+            for (auto &&child : node->Children())
+            {
+                if ((!maze.IsFrontier(child.State())) && maze.IsNotDiscovered(child.State()))
+                {
+                    frontier.push_back(&child);
+                    maze.MarkFrontier(child.State());
+                    std::sort(frontier.begin(), frontier.end(), cmp);
+                }
+                else if (maze.IsFrontier(child.State()))
+                {
+                    auto f = std::find(frontier.begin(), frontier.end(), &child);
+                    if (f != frontier.end() && (*f)->PathCost() > child.PathCost())
+                    {
+                        auto index = f - frontier.begin();
+                        maze.MarkRoad(frontier[index]->State());
+                        frontier[index] = &child;
+                    }
                 }
             }
         }
