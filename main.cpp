@@ -25,7 +25,8 @@ int main(int, char **)
     // mazeSolver.DfsIterative(maze, initial, goal, solution);
     // mazeSolver.DfsIterativeWıthPath(maze, initial, goal, solution);
     // auto result = mazeSolver.Dls(maze, initial, goal, 10000000, aisa::MazeSolver::Implementation::recursive);
-    auto result = mazeSolver.IterativeDeepeningSearch(maze, initial, goal, solution, aisa::MazeSolver::Implementation::recursive);
+    // auto result = mazeSolver.IterativeDeepeningSearch(maze, initial, goal, solution, aisa::MazeSolver::Implementation::recursive);
+    auto result = mazeSolver.UniformCostSearch(maze,initial,goal,solution);
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

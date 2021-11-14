@@ -37,6 +37,7 @@ namespace aisa
         bool DfsIterative(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution);
         MazeSolver::DlsResult Dls(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution, size_t limit, Implementation implementation);
         bool IterativeDeepeningSearch(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution, Implementation implementation);
+        bool UniformCostSearch(aisa::Maze &maze, cv::Point initial, cv::Point goal, std::vector<cv::Point> &solution);
 
     private:
         MazeSolver::DlsResult DlsRecursive(aisa::Maze &maze, cv::Point initial, cv::Point goal, size_t limit);
